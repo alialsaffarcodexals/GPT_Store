@@ -175,6 +175,11 @@ app.delete('/api/admin/products/:id', authRequired, adminRequired, (req, res) =>
 // Health
 app.get('/api/health', (_req, res) => res.json({ ok: true }));
 
+// Root
+app.get('/', (_req, res) => {
+  res.send('GPT Store API is running');
+});
+
 app.listen(PORT, () => {
   console.log(`GPT Store server running on http://localhost:${PORT}`);
 });
