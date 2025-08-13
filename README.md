@@ -28,7 +28,7 @@ Client runs at **http://localhost:5173**.
 docker build -t gpt-store .
 docker run -p 4000:4000 gpt-store
 ```
-The container exposes the API at **http://localhost:4000**.
+The container serves the full app (API and client) at **http://localhost:4000**.
 
 ## Features
 - Product catalog + search/filter
