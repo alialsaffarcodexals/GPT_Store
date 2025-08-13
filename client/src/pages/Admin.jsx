@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useRef } from 'react'
 import ProtectedRoute from '../components/ProtectedRoute'
 import { AdminAPI, ProductAPI } from '../api'
 
@@ -10,6 +10,7 @@ export default function Admin() {
   const [form, setForm] = useState(empty)
   const [editingId, setEditingId] = useState(null)
   const [error, setError] = useState('')
+  const fileRef = useRef()
 
   const load = async () => {
     try {
@@ -72,7 +73,18 @@ export default function Admin() {
                 </select>
                 <input placeholder="Stock" value={form.stock} onChange={e=>setForm({...form, stock:e.target.value})} />
               </div>
-              <input placeholder="Image URL (optional)" value={form.image} onChange={e=>setForm({...form, image:e.target.value})} />
+              <div className="row" style={{alignItems:'center'}}>
+                <button type="button" className="ghost" onClick={() => fileRef.current.click()}>Upload Image</button>
+                <input type="file" accept="image/*" ref={fileRef} style={{display:'none'}} onChange={e => {
+                  const file = e.target.files[0]
+                  if (file) {
+                    const reader = new FileReader()
+                    reader.onloadend = () => setForm({...form, image: reader.result})
+                    reader.readAsDataURL(file)
+                  }
+                }} />
+                {form.image && <img src={form.image} alt="preview" style={{height:40, borderRadius:8}} />}
+              </div>
               <div className="row">
                 <button onClick={save}>{editingId ? 'Update' : 'Create'}</button>
                 {editingId && <button className="ghost" onClick={() => { setForm(empty); setEditingId(null) }}>Cancel</button>}

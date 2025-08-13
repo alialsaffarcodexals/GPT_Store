@@ -31,11 +31,20 @@ button {
   font-weight: 700;
   box-shadow: var(--shadow);
   cursor: pointer;
+  transition: transform 0.1s, filter 0.2s;
+  white-space: nowrap;
 }
 button.ghost {
   background: #000;
   color: var(--accent);
   border: 1px solid var(--accent);
+}
+button:hover {
+  transform: scale(1.05);
+}
+button:active {
+  transform: scale(0.95);
+  filter: brightness(0.9);
 }
 input, select, textarea {
   background: #0e0e0e;
@@ -52,6 +61,13 @@ input, select, textarea {
   border-radius: 16px;
   padding: 16px;
   box-shadow: var(--shadow);
+}
+.product-card {
+  transition: transform 0.2s;
+  cursor: pointer;
+}
+.product-card:hover {
+  transform: scale(1.02);
 }
 .grid {
   display: grid;

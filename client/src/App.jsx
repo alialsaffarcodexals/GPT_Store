@@ -7,6 +7,7 @@ import Login from './pages/Login'
 import Register from './pages/Register'
 import Checkout from './pages/Checkout'
 import Admin from './pages/Admin'
+import Product from './pages/Product'
 
 function Navbar() {
   const { user, logout } = useAuth()
@@ -16,12 +17,17 @@ function Navbar() {
     <div className="nav">
       <div className="container flex">
         <Link className="brand neon-title" to="/">GPT Store</Link>
-        <div className="space" />
         <Link to="/">Home</Link>
         {user?.is_admin && <Link to="/admin">Admin</Link>}
+        <div className="space" />
         {!user && <Link to="/login">Login</Link>}
         {!user && <Link to="/register">Register</Link>}
-        {user && <span className="badge">Hi, {user.name}</span>}
+        {user && (
+          <div className="row" style={{alignItems:'center'}}>
+            <span style={{fontSize:18}}>👤</span>
+            <span>{user.name}</span>
+          </div>
+        )}
         {user && <button className="ghost" onClick={() => { logout(); navigate('/'); }}>Logout</button>}
         <button onClick={open}>Cart</button>
       </div>
@@ -41,6 +47,7 @@ export default function App() {
             <Route path="/register" element={<Register />} />
             <Route path="/checkout" element={<Checkout />} />
             <Route path="/admin" element={<Admin />} />
+            <Route path="/products/:id" element={<Product />} />
           </Routes>
         </div>
       </CartProvider>
