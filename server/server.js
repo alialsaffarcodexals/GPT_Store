@@ -5,6 +5,9 @@ import dotenv from 'dotenv';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import db from './db.js';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import fs from 'fs';
 
 dotenv.config();
 
@@ -12,6 +15,7 @@ const app = express();
 const PORT = process.env.PORT || 4000;
 const CLIENT_ORIGIN = process.env.CLIENT_ORIGIN || 'http://localhost:5173';
 const JWT_SECRET = process.env.JWT_SECRET || 'devsupersecret';
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 app.use(cors({
   origin: CLIENT_ORIGIN,
@@ -175,10 +179,21 @@ app.delete('/api/admin/products/:id', authRequired, adminRequired, (req, res) =>
 // Health
 app.get('/api/health', (_req, res) => res.json({ ok: true }));
 
-// Root
-app.get('/', (_req, res) => {
-  res.send('GPT Store API is running');
-});
+// Static client (built with Vite)
+const PUBLIC_DIR = path.join(__dirname, 'public');
+if (fs.existsSync(PUBLIC_DIR)) {
+  app.use(express.static(PUBLIC_DIR));
+  app.get('*', (req, res) => {
+    if (req.path.startsWith('/api')) {
+      return res.status(404).json({ error: 'Not found' });
+    }
+    res.sendFile(path.join(PUBLIC_DIR, 'index.html'));
+  });
+} else {
+  app.get('/', (_req, res) => {
+    res.send('GPT Store API is running');
+  });
+}
 
 app.listen(PORT, () => {
   console.log(`GPT Store server running on http://localhost:${PORT}`);
