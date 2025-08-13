@@ -1,0 +1,21 @@
+name: Docker
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build image
+        run: docker build -t gpt-store .
+      - name: Run container
+        run: |
+          docker run -d --name gpt-store -p 4000:4000 gpt-store
+          sleep 5
+          curl -f http://localhost:4000/api/health
+          docker stop gpt-store

@@ -23,6 +23,13 @@ npm run dev
 ```
 Client runs at **http://localhost:5173**.
 
+### 3) Docker
+```bash
+docker build -t gpt-store .
+docker run -p 4000:4000 gpt-store
+```
+The container exposes the API at **http://localhost:4000**.
+
 ## Features
 - Product catalog + search/filter
 - Add to Cart, Cart Drawer, Checkout (mock payment selection)
