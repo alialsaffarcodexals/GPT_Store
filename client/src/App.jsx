@@ -2,6 +2,7 @@ import React from 'react'
 import { Routes, Route, Link, useNavigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import { CartProvider, useCart } from './context/CartContext'
+import CartDrawer from './components/CartDrawer'
 import Home from './pages/Home'
 import Login from './pages/Login'
 import Register from './pages/Register'
@@ -50,6 +51,7 @@ export default function App() {
             <Route path="/products/:id" element={<Product />} />
           </Routes>
         </div>
+        <CartDrawer />
       </CartProvider>
     </AuthProvider>
   )
