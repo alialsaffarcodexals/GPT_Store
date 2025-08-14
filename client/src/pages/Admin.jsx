@@ -9,7 +9,10 @@ export default function Admin() {
   const [products, setProducts] = useState([])
   const [form, setForm] = useState(empty)
   const [editingId, setEditingId] = useState(null)
+  const [userForm, setUserForm] = useState({ name:'', email:'', password:'', is_admin:false })
+  const [userEditingId, setUserEditingId] = useState(null)
   const [error, setError] = useState('')
+  const [userError, setUserError] = useState('')
   const fileRef = useRef()
 
   const load = async () => {
@@ -51,6 +54,38 @@ export default function Admin() {
     if (!confirm('Delete this product?')) return
     await AdminAPI.deleteProduct(id)
     await load()
+  }
+
+  const saveUser = async () => {
+    try {
+      const payload = { ...userForm, is_admin: userForm.is_admin ? 1 : 0 }
+      if (userEditingId) {
+        await AdminAPI.updateUser(userEditingId, payload)
+      } else {
+        await AdminAPI.addUser(payload)
+      }
+      setUserForm({ name:'', email:'', password:'', is_admin:false })
+      setUserEditingId(null)
+      setUserError('')
+      await load()
+    } catch (e) {
+      setUserError(e.message)
+    }
+  }
+
+  const editUser = (u) => {
+    setUserEditingId(u.id)
+    setUserForm({ name:u.name, email:u.email, password:'', is_admin:!!u.is_admin })
+  }
+
+  const removeUser = async (id) => {
+    if (!confirm('Delete this user?')) return
+    try {
+      await AdminAPI.deleteUser(id)
+      await load()
+    } catch (e) {
+      setUserError(e.message)
+    }
   }
 
   return (
@@ -122,14 +157,31 @@ export default function Admin() {
         <div style={{width:380}}>
           <div className="card">
             <div className="neon-title" style={{fontSize:20}}>Users</div>
+            <div className="row" style={{flexDirection:'column', marginBottom:12}}>
+              <input placeholder="Name" value={userForm.name} onChange={e=>setUserForm({...userForm, name:e.target.value})} />
+              <input placeholder="Email" value={userForm.email} onChange={e=>setUserForm({...userForm, email:e.target.value})} />
+              <input type="password" placeholder="Password" value={userForm.password} onChange={e=>setUserForm({...userForm, password:e.target.value})} />
+              <label style={{display:'flex', alignItems:'center', gap:4}}>
+                <input type="checkbox" checked={userForm.is_admin} onChange={e=>setUserForm({...userForm, is_admin:e.target.checked})} /> Admin
+              </label>
+              <div className="row">
+                <button onClick={saveUser}>{userEditingId ? 'Update' : 'Create'}</button>
+                {userEditingId && <button className="ghost" onClick={()=>{setUserForm({name:'',email:'',password:'',is_admin:false}); setUserEditingId(null);}}>Cancel</button>}
+              </div>
+              {userError && <div style={{color:'var(--danger)'}}>{userError}</div>}
+            </div>
             <table className="table">
-              <thead><tr><th>Name</th><th>Email</th><th>Admin</th></tr></thead>
+              <thead><tr><th>Name</th><th>Email</th><th>Admin</th><th></th></tr></thead>
               <tbody>
                 {users.map(u => (
                   <tr key={u.id}>
                     <td>{u.name}</td>
                     <td>{u.email}</td>
                     <td>{u.is_admin ? 'Yes' : 'No'}</td>
+                    <td style={{textAlign:'right'}}>
+                      <button className="ghost" onClick={() => editUser(u)}>Edit</button>{' '}
+                      <button className="ghost" onClick={() => removeUser(u.id)}>Delete</button>
+                    </td>
                   </tr>
                 ))}
               </tbody>

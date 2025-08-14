@@ -21,7 +21,8 @@ app.use(cors({
   origin: CLIENT_ORIGIN,
   credentials: true
 }));
-app.use(express.json());
+// allow large JSON payloads for image uploads
+app.use(express.json({ limit: '5mb' }));
 app.use(cookieParser());
 
 // --------- Helpers / Middleware ---------
@@ -112,6 +113,34 @@ app.get('/api/products/:id', (req, res) => {
   res.json({ product: p });
 });
 
+// Reviews
+app.get('/api/products/:id/reviews', (req, res) => {
+  const reviews = db.prepare(`
+    SELECT r.id, r.rating, r.comment, r.created_at, u.name
+    FROM reviews r
+    JOIN users u ON r.user_id = u.id
+    WHERE r.product_id = ?
+    ORDER BY r.created_at DESC`).all(req.params.id);
+  res.json({ reviews });
+});
+
+app.post('/api/products/:id/reviews', authRequired, (req, res) => {
+  const { rating, comment } = req.body;
+  if (!rating || rating < 1 || rating > 5 || !comment) {
+    return res.status(400).json({ error: 'Invalid review' });
+  }
+  const prod = db.prepare('SELECT id FROM products WHERE id = ?').get(req.params.id);
+  if (!prod) return res.status(404).json({ error: 'Product not found' });
+  const info = db.prepare('INSERT INTO reviews (product_id, user_id, rating, comment) VALUES (?, ?, ?, ?)')
+    .run(req.params.id, req.user.id, rating, comment);
+  const review = db.prepare(`
+    SELECT r.id, r.rating, r.comment, r.created_at, u.name
+    FROM reviews r
+    JOIN users u ON r.user_id = u.id
+    WHERE r.id = ?`).get(info.lastInsertRowid);
+  res.json({ review });
+});
+
 // --------- Orders ---------
 app.post('/api/orders', authRequired, (req, res) => {
   const { items, payment_method } = req.body; // items: [{product_id, quantity}]
@@ -148,6 +177,43 @@ app.post('/api/orders', authRequired, (req, res) => {
 app.get('/api/admin/users', authRequired, adminRequired, (req, res) => {
   const users = db.prepare('SELECT id, name, email, is_admin, created_at FROM users ORDER BY created_at DESC').all();
   res.json({ users });
+});
+
+app.get('/api/admin/users/:id', authRequired, adminRequired, (req, res) => {
+  const user = db.prepare('SELECT id, name, email, is_admin, created_at FROM users WHERE id = ?').get(req.params.id);
+  if (!user) return res.status(404).json({ error: 'Not found' });
+  res.json({ user });
+});
+
+app.post('/api/admin/users', authRequired, adminRequired, (req, res) => {
+  const { name, email, password, is_admin } = req.body;
+  if (!name || !email || !password) return res.status(400).json({ error: 'Missing fields' });
+  const exists = db.prepare('SELECT id FROM users WHERE email = ?').get(email);
+  if (exists) return res.status(409).json({ error: 'Email already registered' });
+  const hash = bcrypt.hashSync(password, 10);
+  const info = db.prepare('INSERT INTO users (name, email, password_hash, is_admin) VALUES (?, ?, ?, ?)')
+    .run(name, email, hash, is_admin ? 1 : 0);
+  const user = db.prepare('SELECT id, name, email, is_admin, created_at FROM users WHERE id = ?').get(info.lastInsertRowid);
+  res.json({ user });
+});
+
+app.put('/api/admin/users/:id', authRequired, adminRequired, (req, res) => {
+  const { name, email, password, is_admin } = req.body;
+  const u = db.prepare('SELECT * FROM users WHERE id = ?').get(req.params.id);
+  if (!u) return res.status(404).json({ error: 'Not found' });
+  const hash = password ? bcrypt.hashSync(password, 10) : u.password_hash;
+  const adminVal = typeof is_admin === 'number' ? is_admin : (is_admin ? 1 : 0);
+  db.prepare('UPDATE users SET name=?, email=?, password_hash=?, is_admin=? WHERE id=?')
+    .run(name ?? u.name, email ?? u.email, hash, adminVal ?? u.is_admin, u.id);
+  const user = db.prepare('SELECT id, name, email, is_admin, created_at FROM users WHERE id = ?').get(u.id);
+  res.json({ user });
+});
+
+app.delete('/api/admin/users/:id', authRequired, adminRequired, (req, res) => {
+  const u = db.prepare('SELECT id FROM users WHERE id = ?').get(req.params.id);
+  if (!u) return res.status(404).json({ error: 'Not found' });
+  db.prepare('DELETE FROM users WHERE id = ?').run(u.id);
+  res.json({ ok: true });
 });
 
 app.post('/api/admin/products', authRequired, adminRequired, (req, res) => {
