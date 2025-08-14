@@ -178,9 +178,11 @@ export default function Admin() {
                     <td>{u.name}</td>
                     <td>{u.email}</td>
                     <td>{u.is_admin ? 'Yes' : 'No'}</td>
-                    <td style={{textAlign:'right'}}>
-                      <button className="ghost" onClick={() => editUser(u)}>Edit</button>{' '}
-                      <button className="ghost" onClick={() => removeUser(u.id)}>Delete</button>
+                    <td>
+                      <div className="row" style={{justifyContent:'flex-end', gap:8}}>
+                        <button className="ghost" onClick={() => editUser(u)}>Edit</button>
+                        <button className="ghost" onClick={() => removeUser(u.id)}>Delete</button>
+                      </div>
                     </td>
                   </tr>
                 ))}
