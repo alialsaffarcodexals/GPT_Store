@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { ProductAPI } from '../api'
 import ProductCard from '../components/ProductCard'
-import CartDrawer from '../components/CartDrawer'
 
 const categories = ['Mobile Phone', 'Laptop', 'PC', 'TV Screen', 'Addon']
 
@@ -43,7 +42,6 @@ export default function Home() {
           {products.map(p => <ProductCard key={p.id} product={p} />)}
         </div>
       )}
-      <CartDrawer />
     </div>
   )
 }
